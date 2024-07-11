@@ -1,14 +1,14 @@
 public class GameObject
     {
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int XPosition { get; set; }
+        public int YPosition { get; set; }
         public ConsoleColor Color { get; set; }
-        private string direction = "RIGHT";
+        private string direction = "RIGHT"; //initial direction
 
-        public GameObject(int x, int y, ConsoleColor color)
+        public GameObject(int xpos, int ypos, ConsoleColor color)
         {
-            X = x;
-            Y = y;
+            XPosition = xpos;
+            YPosition = ypos;
             Color = color;
         }
 
@@ -31,21 +31,21 @@ public class GameObject
             }
         }
 
-        public void Move()
+        public void ChangePosition()
         {
             switch (direction)
             {
                 case "UP":
-                    Y--;
+                    YPosition--;
                     break;
                 case "DOWN":
-                    Y++;
+                    YPosition++;
                     break;
                 case "LEFT":
-                    X--;
+                    XPosition--;
                     break;
                 case "RIGHT":
-                    X++;
+                    XPosition++;
                     break;
             }
         }

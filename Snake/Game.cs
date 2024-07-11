@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace Snake
 {
-     public class Game
+    public class Game
     {
         private const int InitialScore = 0;
-        private const int GameDelay = 500; // Milliseconds
+        private const int GameDelay = 350; // Milliseconds
         private const ConsoleColor BorderColor = ConsoleColor.White;
         private const ConsoleColor BerryColor = ConsoleColor.Red;
         private const ConsoleColor BodyColor = ConsoleColor.Green;
@@ -19,7 +19,7 @@ namespace Snake
         private Random random = new Random();
         private int score = InitialScore;
         private bool gameOver = false;
-        private GameObject head;
+        private GameObject gameObject;
         private List<int> bodyXPositions = new List<int>();
         private List<int> bodyYPositions = new List<int>();
         private int foodX;
@@ -27,9 +27,9 @@ namespace Snake
 
         public void Initialize()
         {
-            Console.WindowHeight = 16;
-            Console.WindowWidth = 32;
-            head = new GameObject(screenWidth / 2, screenHeight / 2, HeadColor);
+            Console.WindowHeight = screenHeight;
+            Console.WindowWidth = screenWidth;
+            gameObject = new GameObject(screenWidth / 2, screenHeight / 2, HeadColor);
             foodX = random.Next(1, screenWidth - 2);
             foodY = random.Next(1, screenHeight - 2);
             SetRenderVisible();
@@ -41,10 +41,11 @@ namespace Snake
             while (!gameOver)
             {
                 ClearPreviousFrame();
-                ProcessCollisions();
-                RenderBerry();
-                DrawSnake();
-                if (gameOver) break;
+                checkGameOver();
+                checkFoodCapture();
+                RenderFood();
+                RenderSnakeHead();
+                RenderSnakeBody();
                 UpdateSnakePosition();
                 ProcessInput();
                 System.Threading.Thread.Sleep(GameDelay);
@@ -57,13 +58,10 @@ namespace Snake
             Console.CursorVisible = false;
         }
 
-        private void SetRenderInvisible()
-        {
-            Console.CursorVisible = true;
-        }
 
-        private void RenderObject(){
-                Console.Write("■");
+        private void RenderObject()
+        {
+            Console.Write("■");
         }
 
         private void DrawBorders()
@@ -92,49 +90,59 @@ namespace Snake
             DrawBorders();
         }
 
-        private void ProcessCollisions()
+        private void checkGameOver()
         {
-            if (head.X == 0 || head.X == screenWidth - 1 || head.Y == 0 || head.Y == screenHeight - 1)
+            if (gameObject.XPosition == 0 || gameObject.XPosition == screenWidth - 1 ||
+                gameObject.YPosition == 0 || gameObject.YPosition == screenHeight - 1)
                 gameOver = true;
 
-            if (head.X == foodX && head.Y == foodY)
+            if (bodyXPositions.Contains(gameObject.XPosition) && bodyYPositions.Contains(gameObject.YPosition))
+                gameOver = true;
+        }
+
+        private void checkFoodCapture()
+        {
+
+            if (gameObject.XPosition == foodX && gameObject.YPosition == foodY)
             {
                 score++;
                 foodX = random.Next(1, screenWidth - 2);
                 foodY = random.Next(1, screenHeight - 2);
             }
-
-            if (bodyXPositions.Contains(head.X) && bodyYPositions.Contains(head.Y))
-                gameOver = true;
         }
 
 
 
-        private void RenderBerry()
+        private void RenderFood()
         {
             Console.SetCursorPosition(foodX, foodY);
             Console.ForegroundColor = BerryColor;
             RenderObject();
         }
 
-        private void DrawSnake()
+        private void RenderSnakeBody()
         {
-            foreach (var pos in bodyXPositions.Zip(bodyYPositions, (x, y) => new { X = x, Y = y }))
+            foreach (var position in bodyXPositions.Zip(bodyYPositions, (x, y) => new { X = x, Y = y }))
             {
-                Console.SetCursorPosition(pos.X, pos.Y);
+                Console.SetCursorPosition(position.X, position.Y);
                 Console.ForegroundColor = BodyColor;
                 RenderObject();
             }
-            Console.SetCursorPosition(head.X, head.Y);
-            Console.ForegroundColor = head.Color;
+
+        }
+
+        private void RenderSnakeHead()
+        {
+            Console.SetCursorPosition(gameObject.XPosition, gameObject.YPosition);
+            Console.ForegroundColor = gameObject.Color;
             RenderObject();
         }
 
         private void UpdateSnakePosition()
         {
-            bodyXPositions.Add(head.X);
-            bodyYPositions.Add(head.Y);
-            head.Move();
+            bodyXPositions.Add(gameObject.XPosition);
+            bodyYPositions.Add(gameObject.YPosition);
+            gameObject.ChangePosition();
 
             if (bodyXPositions.Count > score)
             {
@@ -148,7 +156,7 @@ namespace Snake
             if (Console.KeyAvailable)
             {
                 var key = Console.ReadKey(true).Key;
-                head.UpdateDirection(key);
+                gameObject.UpdateDirection(key);
             }
         }
 
